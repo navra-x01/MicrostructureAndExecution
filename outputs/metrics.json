@@ -1,0 +1,24 @@
+{
+  "metrics": {
+    "total_trades": 86,
+    "total_pnl": -260.0099999999969,
+    "total_return_pct": 0.0,
+    "win_rate": 0.5,
+    "sharpe_ratio": -0.4115121416551437,
+    "max_drawdown": 699.8199999999983,
+    "max_drawdown_pct": 989.2847045518483,
+    "avg_trade_pnl": -3.02337209302322,
+    "num_trades": 86
+  },
+  "final_accounting": {
+    "position": 0.0,
+    "avg_entry_price": 96.48,
+    "cash": 98872.83591,
+    "realized_pnl": -260.0099999999969,
+    "unrealized_pnl": 0.0,
+    "total_pnl": -260.0099999999969,
+    "total_value": 98872.83591
+  },
+  "num_trades": 86,
+  "num_events": 1000
+}
