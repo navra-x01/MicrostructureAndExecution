@@ -60,7 +60,7 @@ if st.sidebar.button("Load Data", type="primary"):
             if data_file.size == 0:
                 st.session_state.error = "File is empty!"
                 st.rerun()
-                return
+                st.stop()
             
             # Read CSV
             try:
@@ -72,7 +72,7 @@ if st.sidebar.button("Load Data", type="primary"):
                 if missing_cols:
                     st.session_state.error = f"CSV missing required columns: {missing_cols}"
                     st.rerun()
-                    return
+                    st.stop()
                 
                 # Store data in session state
                 st.session_state.csv_data = df
