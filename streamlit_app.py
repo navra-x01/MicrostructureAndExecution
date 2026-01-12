@@ -11,5 +11,11 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Import and run the dashboard
-import dashboard.app
+# Import and run the dashboard with error handling
+try:
+    import dashboard.app
+except ImportError as e:
+    import streamlit as st
+    st.error(f"Import error: {e}")
+    st.error("Please check the dashboard module dependencies")
+    st.stop()
