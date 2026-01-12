@@ -11,23 +11,14 @@ This dashboard provides a real-time visualization of:
 
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import time
 from pathlib import Path
 import sys
 import tempfile
 import json
 import io
-
-# Ensure Plotly is available even if the dependency install was skipped in the deployment environment.
-try:
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-except ModuleNotFoundError:
-    import subprocess
-
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "plotly>=5.24.1,<6.0.0"])
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
