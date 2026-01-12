@@ -12,4 +12,4 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Import and run the dashboard
-from dashboard.app import *
+import dashboard.app
