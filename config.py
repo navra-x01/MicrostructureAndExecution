@@ -15,13 +15,7 @@ DATA_DIR = PROJECT_ROOT / "data"
 OUTPUT_DIR = PROJECT_ROOT / "outputs"
 
 # Ensure output directory exists
-try:
-    OUTPUT_DIR.mkdir(exist_ok=True)
-except Exception as e:
-    # In Streamlit Cloud, directory creation might fail due to permissions
-    # This is not critical for the app to run
-    import warnings
-    warnings.warn(f"Could not create output directory: {e}")
+OUTPUT_DIR.mkdir(exist_ok=True)
 
 # Order Book Configuration
 ORDER_BOOK_DEPTH = 5  # Number of levels to maintain (top 5 bids and asks)

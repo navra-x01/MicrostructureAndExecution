@@ -11,250 +11,58 @@ This dashboard provides a real-time visualization of:
 
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import time
 from pathlib import Path
 import sys
 import tempfile
 import json
 import io
-import traceback
 
-# #region agent log
-log_path = Path(__file__).parent.parent / ".cursor" / "debug.log"
+# Ensure Plotly is available even if the dependency install was skipped in the deployment environment.
 try:
-    with open(log_path, "a") as f:
-        f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "C", "location": "dashboard/app.py:23", "message": "Starting dashboard/app.py imports", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-except: pass
-# #endregion
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+except ModuleNotFoundError:
+    import subprocess
+
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "plotly>=5.24.1,<6.0.0"])
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
 
 # Add parent directory to path for imports
-parent_dir = Path(__file__).parent.parent
-sys.path.insert(0, str(parent_dir))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# #region agent log
-try:
-    with open(log_path, "a") as f:
-        f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "C", "location": "dashboard/app.py:30", "message": "Path inserted", "data": {"parent_dir": str(parent_dir)}, "timestamp": int(time.time() * 1000)}) + "\n")
-except: pass
-# #endregion
-
-try:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "D", "location": "dashboard/app.py:34", "message": "About to import microstructure", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    from microstructure import OrderBook, SignalEngine, L2Replayer
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "D", "location": "dashboard/app.py:38", "message": "microstructure imported", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-except Exception as e:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "D", "location": "dashboard/app.py:42", "message": "microstructure import failed", "data": {"error": str(e), "traceback": traceback.format_exc()}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    st.error("❌ **Failed to import microstructure module**")
-    st.exception(e)
-    st.code(traceback.format_exc(), language="python")
-    st.stop()
-
-try:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "E", "location": "dashboard/app.py:47", "message": "About to import trading", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    from trading import MeanReversionStrategy, ExecutionSimulator, Accountant
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "E", "location": "dashboard/app.py:51", "message": "trading imported", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-except Exception as e:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "E", "location": "dashboard/app.py:55", "message": "trading import failed", "data": {"error": str(e), "traceback": traceback.format_exc()}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    st.error("❌ **Failed to import trading module**")
-    st.exception(e)
-    st.code(traceback.format_exc(), language="python")
-    st.stop()
-
-try:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "F", "location": "dashboard/app.py:60", "message": "About to import analysis", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    from analysis.backtest_metrics import generate_summary_metrics
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "F", "location": "dashboard/app.py:64", "message": "analysis imported", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-except Exception as e:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "F", "location": "dashboard/app.py:68", "message": "analysis import failed", "data": {"error": str(e), "traceback": traceback.format_exc()}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    st.error("❌ **Failed to import analysis module**")
-    st.exception(e)
-    st.code(traceback.format_exc(), language="python")
-    st.stop()
-
-try:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "G", "location": "dashboard/app.py:73", "message": "About to import main", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    from main import BacktestEngine
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "G", "location": "dashboard/app.py:77", "message": "main imported", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-except Exception as e:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "G", "location": "dashboard/app.py:81", "message": "main import failed", "data": {"error": str(e), "traceback": traceback.format_exc()}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    st.error("❌ **Failed to import main module**")
-    st.exception(e)
-    st.code(traceback.format_exc(), language="python")
-    st.stop()
-
-try:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "H", "location": "dashboard/app.py:86", "message": "About to import config", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    import config
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "H", "location": "dashboard/app.py:90", "message": "config imported", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-except Exception as e:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "H", "location": "dashboard/app.py:94", "message": "config import failed", "data": {"error": str(e), "traceback": traceback.format_exc()}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    st.error("❌ **Failed to import config module**")
-    st.exception(e)
-    st.code(traceback.format_exc(), language="python")
-    st.stop()
+from microstructure import OrderBook, SignalEngine, L2Replayer
+from trading import MeanReversionStrategy, ExecutionSimulator, Accountant
+from analysis.backtest_metrics import generate_summary_metrics
+from main import BacktestEngine
+import config
 
 
 # Page configuration
-try:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "J", "location": "dashboard/app.py:135", "message": "About to set page config", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    st.set_page_config(
-        page_title="Market Microstructure Simulator",
-        page_icon="📈",
-        layout="wide"
-    )
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "J", "location": "dashboard/app.py:143", "message": "Page config set", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-except Exception as e:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "J", "location": "dashboard/app.py:147", "message": "Page config failed", "data": {"error": str(e), "traceback": traceback.format_exc()}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    st.error("❌ **Failed to configure page**")
-    st.exception(e)
-    st.code(traceback.format_exc(), language="python")
-    st.stop()
+st.set_page_config(
+    page_title="Market Microstructure Simulator",
+    page_icon="📈",
+    layout="wide"
+)
 
 # Initialize session state
 if 'orderbook' not in st.session_state:
-    # #region agent log
-    try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "I", "location": "dashboard/app.py:100", "message": "About to initialize session state", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-    except: pass
-    # #endregion
-    try:
-        # #region agent log
-        try:
-            with open(log_path, "a") as f:
-                f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "I", "location": "dashboard/app.py:105", "message": "Creating OrderBook", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-        except: pass
-        # #endregion
-        st.session_state.orderbook = OrderBook()
-        # #region agent log
-        try:
-            with open(log_path, "a") as f:
-                f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "I", "location": "dashboard/app.py:110", "message": "OrderBook created", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-        except: pass
-        # #endregion
-        st.session_state.signal_engine = SignalEngine()
-        st.session_state.strategy = MeanReversionStrategy()
-        st.session_state.execution = ExecutionSimulator()
-        st.session_state.accountant = Accountant()
-        st.session_state.replayer = None
-        st.session_state.is_running = False
-        st.session_state.is_paused = False
-        st.session_state.replay_speed = 1.0
-        st.session_state.trade_log = []
-        st.session_state.pnl_history = []
-        st.session_state.signal_history = []
-        st.session_state.timestamps = []
-        st.session_state.mid_prices = []
-        st.session_state.current_event_index = 0
-        # #region agent log
-        try:
-            with open(log_path, "a") as f:
-                f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "I", "location": "dashboard/app.py:127", "message": "Session state initialized", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-        except: pass
-        # #endregion
-    except Exception as e:
-        # #region agent log
-        try:
-            with open(log_path, "a") as f:
-                f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "I", "location": "dashboard/app.py:131", "message": "Session state init failed", "data": {"error": str(e), "traceback": traceback.format_exc()}, "timestamp": int(time.time() * 1000)}) + "\n")
-        except: pass
-        # #endregion
-        st.error("❌ **Failed to initialize session state**")
-        st.exception(e)
-        st.code(traceback.format_exc(), language="python")
-        st.stop()
+    st.session_state.orderbook = OrderBook()
+    st.session_state.signal_engine = SignalEngine()
+    st.session_state.strategy = MeanReversionStrategy()
+    st.session_state.execution = ExecutionSimulator()
+    st.session_state.accountant = Accountant()
+    st.session_state.replayer = None
+    st.session_state.is_running = False
+    st.session_state.is_paused = False
+    st.session_state.replay_speed = 1.0
+    st.session_state.trade_log = []
+    st.session_state.pnl_history = []
+    st.session_state.signal_history = []
+    st.session_state.timestamps = []
+    st.session_state.mid_prices = []
+    st.session_state.current_event_index = 0
 
 
 def reset_simulation():
@@ -345,12 +153,6 @@ def process_event(event):
 
 
 # Main dashboard
-# #region agent log
-try:
-    with open(log_path, "a") as f:
-        f.write(json.dumps({"sessionId": "debug-session", "runId": "startup", "hypothesisId": "K", "location": "dashboard/app.py:152", "message": "About to render main dashboard", "data": {}, "timestamp": int(time.time() * 1000)}) + "\n")
-except: pass
-# #endregion
 st.title("📈 Market Microstructure Simulator")
 
 # Sidebar controls
