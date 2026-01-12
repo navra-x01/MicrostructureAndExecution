@@ -159,21 +159,57 @@ data_file = st.sidebar.file_uploader(
 if st.sidebar.button("Load Data", type="primary"):
     try:
         if data_file is not None:
+            # Validate file content before processing
+            if data_file.size == 0:
+                st.sidebar.error("Uploaded file is empty!")
+                st.session_state.replayer = None
+                return
+                
             # Save uploaded file temporarily using tempfile (cloud-compatible)
             with tempfile.NamedTemporaryFile(delete=False, suffix='.csv', mode='wb') as tmp_file:
                 tmp_file.write(data_file.getbuffer())
                 temp_path = Path(tmp_file.name)
-            st.session_state.replayer = L2Replayer(data_file=temp_path, orderbook=st.session_state.orderbook)
+            
+            # Validate CSV format before creating replayer
+            try:
+                test_df = pd.read_csv(temp_path)
+                required_columns = ['timestamp']
+                missing_cols = [col for col in required_columns if col not in test_df.columns]
+                if missing_cols:
+                    st.sidebar.error(f"CSV missing required columns: {missing_cols}")
+                    st.session_state.replayer = None
+                    temp_path.unlink()  # Clean up
+                    return
+                    
+                st.session_state.replayer = L2Replayer(data_file=temp_path, orderbook=st.session_state.orderbook)
+                
+            except pd.errors.EmptyDataError:
+                st.sidebar.error("CSV file is empty or invalid!")
+                st.session_state.replayer = None
+                temp_path.unlink()  # Clean up
+                return
+            except pd.errors.ParserError as e:
+                st.sidebar.error(f"CSV parsing error: {str(e)}")
+                st.session_state.replayer = None
+                temp_path.unlink()  # Clean up
+                return
+            except Exception as e:
+                st.sidebar.error(f"Error reading CSV: {str(e)}")
+                st.session_state.replayer = None
+                temp_path.unlink()  # Clean up
+                return
         else:
             st.session_state.replayer = L2Replayer(orderbook=st.session_state.orderbook)
+        
         reset_simulation()
         st.sidebar.success("Data loaded!")
+        
     except Exception as e:
         st.sidebar.error(f"Error loading data: {str(e)}")
         st.session_state.replayer = None
 
 # Replay controls
-col1, col2, col3 = st.sidebar.columns(3)
+col1, col2, col3, col4 = st.sidebar.columns(4)
 
 with col1:
     if st.button("▶️ Start"):
@@ -193,6 +229,17 @@ with col3:
         if st.session_state.replayer:
             st.session_state.replayer.reset()
 
+with col4:
+    if st.button("⏭️ Step"):
+        if st.session_state.replayer is not None:
+            try:
+                event = next(st.session_state.replayer)
+                process_event(event)
+                st.session_state.current_event_index += 1
+            except StopIteration:
+                st.session_state.is_running = False
+                st.sidebar.success("Replay completed!")
+
 # Replay speed
 st.session_state.replay_speed = st.sidebar.slider(
     "Replay Speed",
@@ -203,25 +250,39 @@ st.session_state.replay_speed = st.sidebar.slider(
     help="Speed multiplier for replay (1.0 = normal speed)"
 )
 
+# Auto-play option
+auto_play = st.sidebar.checkbox(
+    "Auto-play (experimental)",
+    value=False,
+    help="Automatically step through events (may cause rapid updates)"
+)
+
 # Main content area
 if st.session_state.replayer is None:
     st.info("👆 Please load data using the sidebar controls to begin.")
 else:
-    # Process events if running
-    if st.session_state.is_running and not st.session_state.is_paused:
+    # Auto-play logic (safe implementation)
+    if auto_play and st.session_state.is_running and not st.session_state.is_paused:
         try:
+            # Process one event
             event = next(st.session_state.replayer)
             process_event(event)
             st.session_state.current_event_index += 1
             
-            # Sleep to control replay speed
-            time.sleep(0.1 / st.session_state.replay_speed)
-            
-            # Auto-refresh
-            st.rerun()
+            # Check if we've reached the end
+            if st.session_state.current_event_index >= st.session_state.replayer.get_total_events():
+                st.session_state.is_running = False
+                st.sidebar.success("Replay completed!")
+                auto_play = False
+            else:
+                # Schedule next update with delay
+                time.sleep(0.1 / st.session_state.replay_speed)
+                st.rerun()
+                
         except StopIteration:
             st.session_state.is_running = False
             st.sidebar.success("Replay completed!")
+            auto_play = False
     
     # Layout: Two columns
     col1, col2 = st.columns([1, 2])
