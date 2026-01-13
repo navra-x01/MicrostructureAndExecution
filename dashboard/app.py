@@ -1,7 +1,4 @@
-"""
-Ultra-minimal Streamlit Dashboard - Standalone Version
-No external dependencies except streamlit and pandas
-"""
+
 
 import streamlit as st
 import pandas as pd
