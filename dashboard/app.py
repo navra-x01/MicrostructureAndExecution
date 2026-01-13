@@ -286,9 +286,8 @@ def run():
             st.exception(e)
             st.session_state.error = f"Error displaying data: {str(e)}"
 
-    # Footer
-    st.markdown("---")
-    st.markdown("✅ **Standalone Version** - No complex dependencies, maximum compatibility")
+  
+    
 
 
 if __name__ == "__main__":
