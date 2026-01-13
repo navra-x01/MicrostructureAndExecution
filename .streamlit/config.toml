@@ -1,4 +1,13 @@
 [theme]
+base = "dark"
+primaryColor = "#4CA3FF"
+backgroundColor = "#0D1117"
+secondaryBackgroundColor = "#161B22"
+textColor = "#E6EDF3"
+
+[client]
+showErrorDetails = true
+[theme]
 primaryColor = "#1f77b4"
 backgroundColor = "#ffffff"
 secondaryBackgroundColor = "#f0f2f6"

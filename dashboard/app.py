@@ -5,10 +5,7 @@ No external dependencies except streamlit and pandas
 
 import streamlit as st
 import pandas as pd
-import tempfile
-from pathlib import Path
-import sys
-import json
+import plotly.express as px
 from datetime import datetime
 
 def init_session_state():
@@ -144,6 +141,81 @@ def run():
                         st.write(f"Data types: {df.dtypes.to_dict()}")
                     except Exception as e:
                         st.error(f"Error displaying data preview: {str(e)}")
+
+                # Lightweight charts
+                with st.expander("📈 Quick Charts"):
+                    try:
+                        # Work on a copy to avoid mutating session data
+                        chart_df = df.copy()
+                        if 'timestamp' in chart_df.columns:
+                            if not pd.api.types.is_datetime64_any_dtype(chart_df['timestamp']):
+                                chart_df['timestamp'] = pd.to_datetime(chart_df['timestamp'], errors='coerce')
+                            chart_df = chart_df.dropna(subset=['timestamp'])
+
+                        # Derive midprice and spread when top-of-book columns exist
+                        if {'bid_price_1', 'ask_price_1'} <= set(chart_df.columns):
+                            chart_df['midprice'] = (chart_df['bid_price_1'] + chart_df['ask_price_1']) / 2
+                            chart_df['spread'] = chart_df['ask_price_1'] - chart_df['bid_price_1']
+
+                        # Limit rows for plotting for performance
+                        plot_df = chart_df.head(800)
+
+                        tabs = st.tabs(["Top-of-Book", "Spread", "Depth Snapshot"])
+
+                        # Top-of-book prices
+                        with tabs[0]:
+                            if {'bid_price_1', 'ask_price_1', 'timestamp'} <= set(plot_df.columns):
+                                fig = px.line(
+                                    plot_df,
+                                    x='timestamp',
+                                    y=['bid_price_1', 'ask_price_1'],
+                                    labels={'value': 'Price', 'timestamp': 'Time', 'variable': 'Side'},
+                                )
+                                fig.update_layout(legend_title_text='')
+                                st.plotly_chart(fig, use_container_width=True)
+                            else:
+                                st.info("Need timestamp, bid_price_1, and ask_price_1 to plot top-of-book.")
+
+                        # Spread
+                        with tabs[1]:
+                            if {'spread', 'timestamp'} <= set(plot_df.columns):
+                                fig = px.line(
+                                    plot_df,
+                                    x='timestamp',
+                                    y='spread',
+                                    labels={'spread': 'Spread', 'timestamp': 'Time'},
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                            else:
+                                st.info("Spread plot needs timestamp, bid_price_1, and ask_price_1.")
+
+                        # Depth snapshot bars
+                        with tabs[2]:
+                            depth_cols = [c for c in plot_df.columns if c.startswith('bid_size_') or c.startswith('ask_size_')]
+                            price_cols = [c for c in plot_df.columns if c.startswith('bid_price_') or c.startswith('ask_price_')]
+                            if depth_cols and price_cols:
+                                snapshot = plot_df.iloc[0]
+                                depth_data = []
+                                for col in depth_cols:
+                                    level = col.split('_')[-1]
+                                    side = 'Bid' if 'bid' in col else 'Ask'
+                                    size = snapshot[col]
+                                    price_col = col.replace('size', 'price')
+                                    price = snapshot.get(price_col, None)
+                                    depth_data.append({'level': f"{side} {level}", 'size': size, 'price': price})
+                                depth_df = pd.DataFrame(depth_data)
+                                fig = px.bar(
+                                    depth_df,
+                                    x='level',
+                                    y='size',
+                                    color='price',
+                                    labels={'level': 'Book Level', 'size': 'Size', 'price': 'Price'},
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                            else:
+                                st.info("Depth snapshot needs bid/ask price and size columns.")
+                    except Exception as e:
+                        st.error(f"Error creating charts: {str(e)}")
                 
                 # Simple controls
                 col1, col2, col3 = st.columns(3)
