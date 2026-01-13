@@ -60,7 +60,6 @@ if st.sidebar.button("Load Data", type="primary"):
             if data_file.size == 0:
                 st.session_state.error = "File is empty!"
                 st.rerun()
-                return
             
             # Check file size (warn if very large, but don't block)
             file_size_mb = data_file.size / (1024 * 1024)
@@ -84,7 +83,6 @@ if st.sidebar.button("Load Data", type="primary"):
                 if df.empty:
                     st.session_state.error = "CSV file contains no data rows!"
                     st.rerun()
-                    return
                 
                 # Validate required columns (timestamp is preferred but not strictly required)
                 if 'timestamp' not in df.columns:
@@ -106,25 +104,20 @@ if st.sidebar.button("Load Data", type="primary"):
             except pd.errors.EmptyDataError:
                 st.session_state.error = "CSV file is empty or has no valid data!"
                 st.rerun()
-                return
             except pd.errors.ParserError as e:
                 st.session_state.error = f"CSV parsing error: {str(e)}"
                 st.rerun()
-                return
             except Exception as e:
                 st.session_state.error = f"Error reading CSV: {str(e)}"
                 st.rerun()
-                return
                 
         else:
             st.session_state.error = "No file uploaded!"
             st.rerun()
-            return
             
     except Exception as e:
         st.session_state.error = f"Upload failed: {str(e)}"
         st.rerun()
-        return
 
 # Main content
 if not st.session_state.data_loaded:
