@@ -79,8 +79,8 @@ def run():
                     except (AttributeError, OSError):
                         pass  # Some file objects don't support seek
                     
-                    # Show loading indicator
-                    with st.sidebar.spinner("Reading CSV file..."):
+                    # Show loading indicator (global spinner works for sidebar too)
+                    with st.spinner("Reading CSV file..."):
                         df = pd.read_csv(data_file)
                     
                     # Check if dataframe is empty
