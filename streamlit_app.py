@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Import and run the dashboard
-# Let Streamlit handle errors and reruns natively.
 import streamlit as st
-import dashboard.app
+from dashboard import app as dashboard_app
+
+dashboard_app.run()
